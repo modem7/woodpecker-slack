@@ -22,10 +22,15 @@ jobs:
         with:
           go-version-file: go.mod
 
+      # golangci-lint-action's "latest" resolves to a pinned release that can
+      # lag behind the Go version in go.mod (it refuses to lint against a
+      # newer Go version than it was built with) - go install always fetches
+      # the newest published release instead, avoiding that skew.
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
       - name: Lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
+        run: golangci-lint run
 
       - name: Test
         run: go test -cover ./...
