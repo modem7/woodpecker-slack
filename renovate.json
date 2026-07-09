@@ -1,13 +1,13 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:recommended"
   ],
-  "docker": {
-    "fileMatch": [
-      "/docker/Dockerfile"
-    ]
-  },
+  "assignees": [
+    "modem7"
+  ],
   "labels": [
-    "renovate"
-  ]
+    "dependencies"
+  ],
+  "timezone": "Europe/London"
 }
