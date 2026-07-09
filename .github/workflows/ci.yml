@@ -32,11 +32,101 @@ jobs:
       - name: Lint
         run: golangci-lint run
 
+      - name: Vet
+        run: go vet ./...
+
+      # Catches dependency bumps that add a require line nothing actually
+      # imports (e.g. urfave/cli/v3 landing alongside a v1 patch bump in
+      # PR #10) - go mod tidy removes anything unused, so a diff here means
+      # go.mod/go.sum drifted from what the source actually needs.
+      - name: Verify go.mod/go.sum are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+
       - name: Test
         run: go test -cover ./...
 
       - name: Build
         run: go build -a -tags netgo -ldflags '-w' .
+
+  smoke-test:
+    needs: lint-test-build
+    runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: 0
+      GOOS: linux
+      GOARCH: amd64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build binary
+        run: go build -a -tags netgo -ldflags '-w' .
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          load: true
+          tags: woodpecker-slack:smoke-test
+
+      # Compiling and unit-testing don't prove a dependency bump (e.g.
+      # slack-go/slack, golang.org/x/text) hasn't changed request framing
+      # or serialization at runtime - actually run the built image against
+      # a real HTTP listener and inspect what it sent, same inputs as
+      # mise.toml's docker:run task.
+      - name: Start mock Slack webhook receiver
+        run: |
+          python3 -c "
+          import http.server
+          class H(http.server.BaseHTTPRequestHandler):
+              def do_POST(self):
+                  length = int(self.headers['Content-Length'])
+                  body = self.rfile.read(length)
+                  with open('/tmp/webhook_capture.json', 'wb') as f:
+                      f.write(body)
+                  self.send_response(200)
+                  self.end_headers()
+          with http.server.HTTPServer(('0.0.0.0', 8888), H) as httpd:
+              httpd.handle_request()
+          " &
+          for i in $(seq 1 20); do
+            (echo > /dev/tcp/127.0.0.1/8888) 2>/dev/null && exit 0
+            sleep 0.5
+          done
+          echo "mock webhook receiver never came up"
+          exit 1
+
+      - name: Run plugin against mock webhook
+        run: |
+          docker run --rm --network host \
+            -e SLACK_WEBHOOK=http://127.0.0.1:8888 \
+            -e PLUGIN_CHANNEL=ci-smoke-test \
+            -e PLUGIN_STATUS=success \
+            -e PLUGIN_DESCRIPTION="CI smoke test" \
+            -e CI_REPO_OWNER=modem7 \
+            -e CI_REPO_NAME=woodpecker-slack \
+            -e CI_COMMIT_SHA=0000000000000000000000000000000000000000 \
+            -e CI_COMMIT_BRANCH=master \
+            -e CI_COMMIT_AUTHOR=ci-smoke-test \
+            -e CI_PIPELINE_NUMBER=1 \
+            -e CI_PIPELINE_URL=http://example.invalid \
+            woodpecker-slack:smoke-test
+
+      - name: Verify the webhook actually received a well-formed Slack payload
+        run: |
+          test -s /tmp/webhook_capture.json
+          jq -e '.attachments[0].color == "good"' /tmp/webhook_capture.json
 
   publish:
     needs: lint-test-build
