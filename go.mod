@@ -8,7 +8,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/joho/godotenv v1.5.1
 	github.com/slack-go/slack v0.23.1
-	github.com/urfave/cli v1.22.14
+	github.com/urfave/cli v1.22.17
 	golang.org/x/text v0.37.0
 	gotest.tools/v3 v3.5.1
 )
@@ -22,7 +22,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
 	github.com/aymerick/raymond v2.0.2+incompatible // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
