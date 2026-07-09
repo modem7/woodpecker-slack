@@ -131,7 +131,7 @@ jobs:
           jq -e '.attachments[0].color == "good"' /tmp/webhook_capture.json
 
   publish:
-    needs: lint-test-build
+    needs: [lint-test-build, smoke-test]
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
     permissions:
