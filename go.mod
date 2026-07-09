@@ -10,7 +10,7 @@ require (
 	github.com/slack-go/slack v0.23.1
 	github.com/urfave/cli v1.22.14
 	golang.org/x/text v0.37.0
-	gotest.tools/v3 v3.5.1
+	gotest.tools/v3 v3.5.2
 )
 
 require (
