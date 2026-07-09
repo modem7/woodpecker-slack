@@ -1,8 +1,8 @@
 repository:
-  name: drone-slack
-  description: Drone plugin for sending Slack notifications
+  name: woodpecker-slack
+  description: Woodpcker plugin for sending Slack notifications
   homepage: http://plugins.drone.io/drone-plugins/drone-slack
-  topics: drone, drone-plugin
+  topics: woodpecker, woodpecker-plugin, slack
 
   private: false
   has_issues: true
@@ -43,31 +43,3 @@ labels:
   - name: wontfix
     color: ffffff
     description: This will not be worked on
-
-teams:
-  - name: Admins
-    permission: admin
-  - name: Captain
-    permission: admin
-  - name: Maintainers
-    permission: push
-
-branches:
-  - name: master
-    protection:
-      required_pull_request_reviews:
-        required_approving_review_count: 1
-        dismiss_stale_reviews: false
-        require_code_owner_reviews: false
-        dismissal_restrictions:
-          teams:
-            - Admins
-            - Captain
-      required_status_checks:
-        strict: true
-        contexts:
-          - continuous-integration/drone/pr
-      enforce_admins: false
-      restrictions:
-        users: []
-        teams: []
