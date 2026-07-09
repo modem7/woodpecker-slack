@@ -3,5 +3,6 @@
   "extends": ["config:recommended"],
   "assignees": ["modem7"],
   "labels": ["dependencies"],
-  "timezone": "Europe/London"
+  "timezone": "Europe/London",
+  "forkProcessing": "enabled"
 }
