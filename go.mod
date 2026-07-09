@@ -7,7 +7,7 @@ require (
 	github.com/go-git/go-git/v5 v5.19.1
 	github.com/google/go-cmp v0.7.0
 	github.com/joho/godotenv v1.5.1
-	github.com/slack-go/slack v0.23.1
+	github.com/slack-go/slack v0.27.0
 	github.com/urfave/cli v1.22.17
 	golang.org/x/text v0.37.0
 	gotest.tools/v3 v3.5.2
