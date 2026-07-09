@@ -84,8 +84,11 @@ jobs:
       # slack-go/slack, golang.org/x/text) hasn't changed request framing
       # or serialization at runtime - actually run the built image against
       # a real HTTP listener and inspect what it sent, same inputs as
-      # mise.toml's docker:run task.
-      - name: Start mock Slack webhook receiver
+      # mise.toml's docker:run task. This all has to be one step: a
+      # background process started in one `run:` step doesn't survive into
+      # the next one, since each step is its own process the runner tears
+      # down when the step ends.
+      - name: Run plugin against a mock Slack webhook and verify the payload
         run: |
           python3 -c "
           import http.server
@@ -101,14 +104,10 @@ jobs:
               httpd.handle_request()
           " &
           for i in $(seq 1 20); do
-            (echo > /dev/tcp/127.0.0.1/8888) 2>/dev/null && exit 0
+            (echo > /dev/tcp/127.0.0.1/8888) 2>/dev/null && break
             sleep 0.5
           done
-          echo "mock webhook receiver never came up"
-          exit 1
 
-      - name: Run plugin against mock webhook
-        run: |
           docker run --rm --network host \
             -e SLACK_WEBHOOK=http://127.0.0.1:8888 \
             -e PLUGIN_CHANNEL=ci-smoke-test \
@@ -123,8 +122,8 @@ jobs:
             -e CI_PIPELINE_URL=http://example.invalid \
             woodpecker-slack:smoke-test
 
-      - name: Verify the webhook actually received a well-formed Slack payload
-        run: |
+          wait
+
           test -s /tmp/webhook_capture.json
           jq -e '.attachments[0].color == "good"' /tmp/webhook_capture.json
 
