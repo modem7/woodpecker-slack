@@ -103,8 +103,11 @@ jobs:
           with http.server.HTTPServer(('0.0.0.0', 8888), H) as httpd:
               httpd.handle_request()
           " &
+          # Checked via the listening socket, not by connecting - handle_request()
+          # serves exactly one request, and a /dev/tcp probe connection would
+          # itself consume that slot before docker run ever gets a chance to.
           for i in $(seq 1 20); do
-            (echo > /dev/tcp/127.0.0.1/8888) 2>/dev/null && break
+            ss -ltn | grep -q ':8888 ' && break
             sleep 0.5
           done
 
